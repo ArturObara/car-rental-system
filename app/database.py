@@ -1,8 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = "sqlite:///./car_rental.db"
+DATABASE_URL = "postgresql+psycopg://postgres:postgres@localhost/car_rental"
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
+
