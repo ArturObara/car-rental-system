@@ -14,3 +14,8 @@ class CarCreate(CarBase):
 
 class CarResponse(CarBase):
     id: int
+
+class UserCreate(BaseModel):
+    name: str = Field(min_length=1)
+    email: str = Field(min_length=1)
+    password: str = Field(min_length=1)
