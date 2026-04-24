@@ -4,12 +4,13 @@ from app.database import SessionLocal
 from app.models import User
 from app.schemas import UserCreate, UserLogin
 from app.security import hash_password, verify_password, create_access_token, decode_access_token
+from app.logger_config import logger
 
 security = HTTPBearer()
 
 def register_user_routes(app: FastAPI):
     @app.post("/users")
-    def create_user(user: UserCreate):
+    def create_user(user: UserCreate) -> dict:
         db = SessionLocal()
 
         new_user = User(
@@ -22,30 +23,34 @@ def register_user_routes(app: FastAPI):
         db.commit()
         db.close()
 
+        logger.info(f"User created: {user.email}")
         return {"message": f"User {user.email} created"}
     
     @app.post("/login")
-    def login_user(user: UserLogin):
+    def login_user(user: UserLogin) -> dict:
         db = SessionLocal()
 
         existing_user = db.query(User).filter(User.email == user.email).first()
 
         if not existing_user:
             db.close()
+            logger.warning(f"Failed login attempt for email: {user.email}")
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
         if not verify_password(user.password, existing_user.hashed_password):
             db.close()
+            logger.warning(f"Failed login attempt for email: {user.email}")
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
         access_token = create_access_token(data={"sub": existing_user.email})
 
         db.close()
+        logger.info(f"User logged in successfully: {user.email}")
         return {"access_token": access_token, "token_type": "bearer"}
     
 
     @app.get("/me")
-    def get_me(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    def get_me(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
         token = credentials.credentials
 
         try:
