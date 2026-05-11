@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.database import SessionLocal
 from app.models import User
@@ -13,41 +13,54 @@ def register_user_routes(app: FastAPI):
     def create_user(user: UserCreate) -> dict:
         db = SessionLocal()
 
-        new_user = User(
-            name=user.name,
-            email=user.email,
-            hashed_password=hash_password(user.password)
-        )
+        try:
+            existing_user = db.query(User).filter(User.email == user.email).first()
+            
+            if existing_user:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="User with this email already exists"
+                )
 
-        db.add(new_user)
-        db.commit()
-        db.close()
+            new_user = User(
+                name=user.name,
+                email=user.email,
+                hashed_password=hash_password(user.password)
+            )
 
-        logger.info(f"User created: {user.email}")
-        return {"message": f"User {user.email} created"}
-    
+            db.add(new_user)
+            db.commit()
+
+            logger.info(f"User created: {user.email}")
+            return {"message": f"User {user.email} created"}
+        finally:
+            db.close()
+
     @app.post("/login")
     def login_user(user: UserLogin) -> dict:
         db = SessionLocal()
 
-        existing_user = db.query(User).filter(User.email == user.email).first()
+        try:
+            existing_user = db.query(User).filter(User.email == user.email).first()
 
-        if not existing_user:
-            db.close()
-            logger.warning(f"Failed login attempt for email: {user.email}")
-            raise HTTPException(status_code=401, detail="Invalid email or password")
+            if not existing_user:
+                logger.warning(f"Failed login attempt for email: {user.email}")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid email or password",
+                )
 
-        if not verify_password(user.password, existing_user.hashed_password):
-            db.close()
-            logger.warning(f"Failed login attempt for email: {user.email}")
-            raise HTTPException(status_code=401, detail="Invalid email or password")
-
-        access_token = create_access_token(data={"sub": existing_user.email})
-
-        db.close()
-        logger.info(f"User logged in successfully: {user.email}")
-        return {"access_token": access_token, "token_type": "bearer"}
-    
+            if not verify_password(user.password, existing_user.hashed_password):
+                logger.warning(f"Failed login attempt for email: {user.email}")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid email or password",
+                )
+            access_token = create_access_token(data={"sub": existing_user.email})
+            logger.info(f"User logged in successfully: {user.email}")
+            return {"access_token": access_token, "token_type": "bearer"}
+        finally: 
+                db.close()
 
     @app.get("/me")
     def get_me(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
@@ -56,11 +69,19 @@ def register_user_routes(app: FastAPI):
         try:
             payload = decode_access_token(token)
         except ValueError:
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="Invalid or expired token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
         user_email = payload.get("sub")
 
         if not user_email:
-            raise HTTPException(status_code=401, detail="Invalid token payload")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="Invalid token payload",
+                headers={"WWW-Authenticate": "Bearer"},
+    )
 
         return {"email": user_email}
