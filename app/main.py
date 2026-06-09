@@ -1,13 +1,18 @@
 from fastapi import FastAPI
-from app.api.cars import register_car_routes
+
 from app.db.database import engine
 from app.db.models import Base
-from app.api.users import register_user_routes
+from app.api import cars, users, rentals 
 
 
-app = FastAPI()
+app = FastAPI(
+    title="Car Rental System API",
+    description="Backend API for managing car rentals, inventory, and users.",
+    version="1.0.0"
+)
 
 Base.metadata.create_all(bind=engine)
 
-register_car_routes(app)
-register_user_routes(app)
+app.include_router(cars.router)
+app.include_router(users.router)
+app.include_router(rentals.router)
