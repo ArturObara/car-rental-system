@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-
 from app.db.database import engine
 from app.db.models import Base
 from app.api import cars, users, rentals 
@@ -12,6 +11,11 @@ app = FastAPI(
 )
 
 Base.metadata.create_all(bind=engine)
+
+
+@app.get("/", tags=["Health Check"])
+def root() -> dict:
+    return {"message": "API is running"}
 
 app.include_router(cars.router)
 app.include_router(users.router)
