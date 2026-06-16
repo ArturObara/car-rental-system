@@ -6,9 +6,9 @@ services:
     container_name: car_rental_db
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin123
-      POSTGRES_DB: car_rental
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin123}
+      POSTGRES_DB: ${POSTGRES_DB:-car_rental}
     ports:
       - "5432:5432"
     volumes:
@@ -20,7 +20,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql+psycopg://postgres:admin123@db:5432/car_rental
+      - DATABASE_URL=postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-admin123}@db:5432/${POSTGRES_DB:-car_rental}
     depends_on:
       - db
 
