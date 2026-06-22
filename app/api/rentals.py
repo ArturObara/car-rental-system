@@ -10,11 +10,17 @@ router = APIRouter(prefix="/rentals", tags=["Rentals"])
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 def rent_car(
-    rental_in: schemas.RentalCreate, 
-    db: Session = Depends(get_db), 
+    rental_in: schemas.RentalCreate,
+    db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    result = rental_service.create_new_rental(db, rental_in.car_id, current_user.id)
+    result = rental_service.create_new_rental(
+        db=db,
+        car_id=rental_in.car_id, 
+        user_id=current_user.id,
+        start_date=rental_in.start_date,
+        days=rental_in.days 
+    )
     
     if not result:
         raise HTTPException(

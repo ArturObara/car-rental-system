@@ -28,6 +28,8 @@ class UserLogin(BaseModel):
 
 class RentalCreate(BaseModel):
     car_id: int
+    start_date: date
+    days: int 
 
 class RentalResponse(BaseModel):
     id: int
