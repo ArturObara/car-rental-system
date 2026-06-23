@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.services import user_service
 from app.schemas.schemas import UserCreate, UserLogin
-from app.config.security import decode_access_token, create_access_token
+from app.config.security import decode_access_token, create_access_token, get_current_user
 from app.config.logger_config import logger
 
 security = HTTPBearer()
@@ -45,25 +45,8 @@ def login_user(user: UserLogin, db: Session = Depends(get_db)) -> dict:
 
 
 @router.get("/me")
-def get_me(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
-    token = credentials.credentials
-
-    try:
-        payload = decode_access_token(token)
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, 
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    user_email = payload.get("sub")
-
-    if not user_email:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, 
-            detail="Invalid token payload",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    return {"email": user_email}
+def get_me(current_user = Depends(get_current_user)) -> dict:
+    return {
+        "email": current_user.email,
+        "name": current_user.name
+    }
