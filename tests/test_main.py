@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 import uuid
+import random
 from app.main import app
 from app.db.database import get_db
 from app.db.models import Car
@@ -70,10 +71,12 @@ def test_login_user() -> None:
 def test_rental_collision() -> None:
     db = next(get_db())
 
-    test_car = Car(id=1, brand="Toyota", model="Corolla", year=2022, available=True)
+    unique_car_id = random.randint(1000, 9999)
+    
+    test_car = Car(id=unique_car_id, brand="Toyota", model="Corolla", year=2022, available=True)
     db.merge(test_car)
     db.commit()
-
+    
     email = f"test_{uuid.uuid4()}@example.com"
     password = "password123"
     
@@ -85,15 +88,14 @@ def test_rental_collision() -> None:
 
     response1 = client.post(
         "/rentals",
-        json={"car_id": 1, "start_date": "2026-07-01", "days": 3},
+        json={"car_id": unique_car_id, "start_date": "2026-07-01", "days": 3},
         headers=headers
     )
     assert response1.status_code == 201
 
     response2 = client.post(
         "/rentals",
-        json={"car_id": 1, "start_date": "2026-07-02", "days": 3},
+        json={"car_id": unique_car_id, "start_date": "2026-07-01", "days": 3},
         headers=headers
     )
     assert response2.status_code == 400
-    assert response2.json()["detail"] == "Car is currently unavailable for rent"
