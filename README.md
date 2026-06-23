@@ -25,7 +25,13 @@ The easiest way to run this project locally is by using Docker.
    cd car-rental-system
    ```
 
-2. **Build and start the containers:**
+2. **Configure environment variables:**
+   Create a copy of the environment template file and adjust it to your local setup:
+   ```bash
+   cp env.example .env
+   ```
+
+3. **Build and start the containers:**
    ```bash
    docker compose up --build
    ```
