@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, field_validator
 from datetime import date
 
 class CarBase(BaseModel):
@@ -29,7 +29,14 @@ class UserLogin(BaseModel):
 class RentalCreate(BaseModel):
     car_id: int
     start_date: date
-    days: int 
+    days: int = Field(ge=1)
+
+    @field_validator("start_date")
+    @classmethod
+    def start_date_not_in_past(cls, val: date) -> date:
+        if val < date.today():
+            raise ValueError("Data rozpoczęcia rezerwacji (start_date) nie może być w przeszłości")
+        return val
 
 class RentalResponse(BaseModel):
     id: int

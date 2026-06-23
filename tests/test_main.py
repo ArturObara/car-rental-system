@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from datetime import date, timedelta
 import uuid
 import random
 from app.main import app
@@ -99,3 +100,40 @@ def test_rental_collision() -> None:
         headers=headers
     )
     assert response2.status_code == 400
+
+def test_rental_validation_fails_on_past_date() -> None:
+    email = f"test_{uuid.uuid4()}@example.com"
+    password = "password123"
+    client.post("/users", json={"name": "Test User", "email": email, "password": password})
+    login_response = client.post("/users/login", json={"email": email, "password": password})
+    token = login_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    past_date = date.today() - timedelta(days=10)
+    
+    response = client.post(
+        "/rentals",
+        json={"car_id": 1, "start_date": str(past_date), "days": 5},
+        headers=headers
+    )
+
+    assert response.status_code == 422
+
+
+def test_rental_validation_fails_on_zero_or_negative_days() -> None:
+    email = f"test_{uuid.uuid4()}@example.com"
+    password = "password123"
+    client.post("/users", json={"name": "Test User", "email": email, "password": password})
+    login_response = client.post("/users/login", json={"email": email, "password": password})
+    token = login_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    future_date = date.today() + timedelta(days=10)
+    
+    response = client.post(
+        "/rentals",
+        json={"car_id": 1, "start_date": str(future_date), "days": 0},
+        headers=headers
+    )
+
+    assert response.status_code == 422
