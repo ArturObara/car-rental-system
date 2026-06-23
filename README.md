@@ -1,6 +1,6 @@
 # Car Rental System
 
-A backend REST API built with FastAPI for a car rental service. The system provides a secure client facing interface for browsing available vehicles and making reservations while also serving as a core foundation for internal fleet management.
+A backend REST API built with FastAPI for a car rental service. This project serves as an **Internal Back-Office System**, allowing authorized rental employees to manage the vehicle fleet, track physical availability, and handle reservations securely.
 
 ## Tech Stack
 * **Language:** Python 3.12
@@ -11,9 +11,9 @@ A backend REST API built with FastAPI for a car rental service. The system provi
 * **Testing & Deployment:** Pytest, Docker, Docker Compose
 
 ## Key Features
-* **User Authentication & Management:** Secure registration and login flow with unique email validation, password hashing (bcrypt), and JWT-based session handling.
-* **Fleet Inventory & Browsing:** Dedicated endpoints to populate and manage the vehicle database, coupled with a RESTful `GET /cars` route for users to browse the fleet.
-* **Smart Reservation Engine:** Booking system that verifies vehicle status via an `available` database flag and employs strict date overlap validation at the database query level to prevent double booking conflicts.
+* **Employee Authentication & Management:** Secure registration and login flow for staff members, featuring unique email validation, password hashing (bcrypt), and JWT-based session handling.
+* **Fleet Management:** Dedicated, secured endpoints to manage the vehicle database (adding/removing cars) and browse the current fleet inventory.
+* **Smart Reservation Engine:** Booking system that prevents double-booking conflicts via strict date overlap validation at the database query level. The system also utilizes an `available` flag to manually mark vehicles as physically out of service (e.g., for maintenance or repairs).
 
 ## Getting Started
 
@@ -21,7 +21,7 @@ The easiest way to run this project locally is by using Docker.
 
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/ArturObara/car-rental-system.git](https://github.com/ArturObara/car-rental-system.git)
+   git clone https://github.com/ArturObara/car-rental-system.git
    cd car-rental-system
    ```
 
