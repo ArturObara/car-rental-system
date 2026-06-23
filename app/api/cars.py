@@ -4,6 +4,7 @@ from app.schemas.schemas import CarCreate, CarResponse
 from app.db.database import get_db
 from app.services import car_service
 from app.config.logger_config import logger
+from app.config.security import get_current_user
 
 router = APIRouter(
     prefix="/cars",
@@ -30,7 +31,11 @@ def get_car(car_id: int, db: Session = Depends(get_db)) -> CarResponse:
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-def create_car(car: CarCreate, db: Session = Depends(get_db)) -> dict:
+def create_car(
+    car: CarCreate, 
+    db: Session = Depends(get_db), 
+    current_user = Depends(get_current_user)
+) -> dict:
     new_car = car_service.create_car(db, car)
     
     if not new_car:
@@ -44,10 +49,14 @@ def create_car(car: CarCreate, db: Session = Depends(get_db)) -> dict:
     
 
 @router.delete("/{car_id}", status_code=status.HTTP_200_OK)
-def delete_car(car_id: int, db: Session = Depends(get_db)) -> dict:
+def delete_car(
+    car_id: int, 
+    db: Session = Depends(get_db), 
+    current_user = Depends(get_current_user)
+) -> dict:
     result = car_service.delete_car(db, car_id)
-        
-    if result is None:
+
+    if not result:
         logger.warning(f"Delete failed, car not found: id={car_id}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 

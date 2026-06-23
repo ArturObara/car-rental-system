@@ -137,3 +137,25 @@ def test_rental_validation_fails_on_zero_or_negative_days() -> None:
     )
 
     assert response.status_code == 422
+
+
+def test_create_car_unauthorized() -> None:
+    response = client.post(
+        "/cars", 
+        json={"brand": "Hacker", "model": "Car", "year": 2024, "available": True}
+    )
+
+    assert response.status_code == 401
+
+
+def test_delete_missing_car_returns_404() -> None:
+    email = f"test_{uuid.uuid4()}@example.com"
+    password = "password123"
+    client.post("/users", json={"name": "Test User", "email": email, "password": password})
+    login_response = client.post("/users/login", json={"email": email, "password": password})
+    token = login_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    response = client.delete("/cars/999999", headers=headers)
+
+    assert response.status_code == 404
